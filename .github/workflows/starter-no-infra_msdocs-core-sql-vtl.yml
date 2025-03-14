@@ -33,15 +33,16 @@ jobs:
         run: dotnet tool install -g dotnet-ef --version 8.*
 
       - name: Create migration bundle
-        run: dotnet ef migrations bundle --runtime linux-x64 -o ./migrationsbundle
+        run: dotnet ef migrations bundle --runtime linux-x64 -o ${{env.DOTNET_ROOT}}/myapp/migrationsbundle
+      
+      - name: Set migration bundle as executable
+        run: chmod +x ${{env.DOTNET_ROOT}}/myapp/migrationsbundle
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: .net-app
-          path: |
-            ${{env.DOTNET_ROOT}}/myapp
-            ./migrationsbundle
+          path: ${{env.DOTNET_ROOT}}/myapp
 
   deploy:
     runs-on: ubuntu-latest
@@ -73,9 +74,3 @@ jobs:
           app-name: 'msdocs-core-sql-vtl'
           slot-name: 'Production'
           package: .
-          
-      
-      - name: Move migrations bundle to App Service wwwroot
-        run: |
-          mv ./migrationsbundle /home/site/wwwroot/migrationsbundle
-          chmod +x /home/site/wwwroot/migrationsbundle

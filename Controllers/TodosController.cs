@@ -92,6 +92,9 @@ namespace DotNetCoreSqlDb.Controllers
         {
             if (ModelState.IsValid)
             {
+                 // Ensure the date is in UTC format for PostgreSQL
+                todo.CreatedDate = DateTime.SpecifyKind(todo.CreatedDate, DateTimeKind.Utc);
+
                 _context.Add(todo);
                 await _context.SaveChangesAsync();
 
@@ -151,6 +154,9 @@ namespace DotNetCoreSqlDb.Controllers
             {
                 try
                 {
+                     // Ensure the date is in UTC format for PostgreSQL
+                    todo.CreatedDate = DateTime.SpecifyKind(todo.CreatedDate, DateTimeKind.Utc);
+
                     _context.Update(todo);
                     await _context.SaveChangesAsync();
 

@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using DotNetCoreSqlDb.Data;
+using static Microsoft.AspNetCore.Http.StatusCodes;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add database context and cache
@@ -25,6 +27,13 @@ builder.Services.AddControllersWithViews();
 
 // Add App Service logging
 builder.Logging.AddAzureWebAppDiagnostics();
+
+// set https port for the middleware to redirect an insecure request to HTTPS.
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.RedirectStatusCode = Status307TemporaryRedirect;
+    options.HttpsPort = 5001;
+});
 
 var app = builder.Build();
 

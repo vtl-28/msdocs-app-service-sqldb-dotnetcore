@@ -81,4 +81,4 @@ jobs:
         with:
           inlineScript: |
             # Run the migration bundle on the App Service
-            az webapp command exec --resource-group msdocs-core-sql-tutorial --name msdocs-core-sql-vtl --command "cd /home/site/wwwroot && ./migrationsbundle"
+            az container exec --resource-group msdocs-core-sql-tutorial --name msdocs-core-sql-vtl --exec-command "cd /home/site/wwwroot && ./migrationsbundle"

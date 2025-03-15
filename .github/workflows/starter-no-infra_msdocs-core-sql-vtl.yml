@@ -74,3 +74,14 @@ jobs:
           app-name: 'msdocs-core-sql-vtl'
           slot-name: 'Production'
           package: .
+          
+      # New step to run migrations via Azure CLI
+      - name: Run migrations via App Service
+        uses: azure/cli@v1
+        with:
+          inlineScript: |
+            # Get the resource group name if you don't have it already
+            RESOURCE_GROUP=$(az webapp show --name msdocs-core-sql-vtl --query resourceGroup -o tsv)
+            
+            # Run the migration bundle on the App Service
+            az webapp ssh --resource-group $RESOURCE_GROUP --name msdocs-core-sql-vtl --command "cd /home/site/wwwroot && ./migrationsbundle"

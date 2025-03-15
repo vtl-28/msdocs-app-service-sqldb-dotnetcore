@@ -74,11 +74,3 @@ jobs:
           app-name: 'msdocs-core-sql-vtl'
           slot-name: 'Production'
           package: .
-          
-      # New step to run migrations via Azure CLI
-      - name: Run migrations via App Service
-        uses: azure/cli@v1
-        with:
-          inlineScript: |
-            # Run the migration bundle on the App Service
-            az container exec --resource-group msdocs-core-sql-tutorial --name msdocs-core-sql-vtl --exec-command "cd /home/site/wwwroot && ./migrationsbundle"

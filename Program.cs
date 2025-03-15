@@ -14,10 +14,10 @@ if(builder.Environment.IsDevelopment())
 else
 {
     builder.Services.AddDbContext<MyDatabaseContext>(options =>
-        options.UseNpgsql(builder.Configuration.GetConnectionString("AZURE_POSTGRESQL_CONNECTIONSTRING")));
+        options.UseNpgsql(builder.Configuration.GetConnectionString("AZURE_SQL_POSTGRESS_CONNECTIONSTRING")));
     builder.Services.AddStackExchangeRedisCache(options =>
     {
-    options.Configuration = builder.Configuration["AZURE_REDIS_CONNECTIONSTRING"];
+    options.Configuration = builder.Configuration["AZURE_REDIS_CONNECTION_STRING"];
     options.InstanceName = "SampleInstance";
     });
 }

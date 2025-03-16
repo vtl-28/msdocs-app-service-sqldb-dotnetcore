@@ -10,71 +10,82 @@ namespace DotNetCoreSqlDb.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-                migrationBuilder.Sql("BEGIN TRANSACTION");
-                
+                migrationBuilder.Sql("BEGIN;");
+
                 try
                 {
                     // Step 1: Add the new column
                     migrationBuilder.AddColumn<string>(
-                        name: "AssitentNameBackup",
+                        name: "AssistentNameBackup",
                         table: "Todo",
                         type: "text",
                         nullable: true);
-
+                        
                     // Step 2: Verify the column was created successfully
                     migrationBuilder.Sql(@"
-                        IF NOT EXISTS (
-                            SELECT 1 
-                            FROM sys.columns 
-                            WHERE object_id = OBJECT_ID('Todo') 
-                            AND name = 'AssitentNameBackup'
-                        )
+                        DO $$
                         BEGIN
-                            THROW 51000, 'New column was not created successfully', 1;
-                        END");
-
+                            IF NOT EXISTS (
+                                SELECT 1 
+                                FROM information_schema.columns 
+                                WHERE table_name = 'Todo' 
+                                AND column_name = 'AssistentNameBackup'
+                            ) THEN
+                                RAISE EXCEPTION 'New column was not created successfully';
+                            END IF;
+                        END $$;");
+                        
                     // Step 3: Transfer the data with verification
                     migrationBuilder.Sql(@"
-                        DECLARE @RowCount INT;
-                        
-                        -- Copy the data
-                        UPDATE Todo 
-                        SET AssitentNameBackup = AssitentName
-                        WHERE AssitentName IS NOT NULL;
-                        
-                        -- Store the number of updated rows
-                        SET @RowCount = @@ROWCOUNT;
-                        
-                        -- Verify data transfer
-                        IF (
-                            SELECT COUNT(*) 
-                            FROM Todo 
-                            WHERE AssitentName IS NOT NULL 
-                            AND (AssitentNameBackup IS NULL OR AssitentNameBackup != AssitentName)
-                        ) > 0
+                        DO $$
+                        DECLARE
+                            updated_rows INTEGER;
+                            incomplete_transfers INTEGER;
                         BEGIN
-                            THROW 51000, 'Data transfer was incomplete or incorrect', 1;
-                        END");
-
+                            -- Copy the data
+                            WITH updated AS (
+                                UPDATE ""Todo"" 
+                                SET ""AssistentNameBackup"" = ""AssistentName""
+                                WHERE ""AssistentName"" IS NOT NULL
+                                RETURNING *
+                            )
+                            SELECT COUNT(*) INTO updated_rows FROM updated;
+                            
+                            -- Verify data transfer
+                            SELECT COUNT(*) INTO incomplete_transfers
+                            FROM ""Todo""
+                            WHERE ""AssistentName"" IS NOT NULL 
+                            AND (""AssistentNameBackup"" IS NULL OR ""AssistentNameBackup"" != ""AssistentName"");
+                            
+                            IF incomplete_transfers > 0 THEN
+                                RAISE EXCEPTION 'Data transfer was incomplete or incorrect. % records not transferred correctly', incomplete_transfers;
+                            END IF;
+                            
+                            RAISE NOTICE 'Successfully transferred data for % records', updated_rows;
+                        END $$;");
+                        
                     // Step 4: Only if previous steps succeeded, drop the old column
                     migrationBuilder.Sql(@"
-                        IF EXISTS (
-                            SELECT 1 
-                            FROM sys.columns 
-                            WHERE object_id = OBJECT_ID('Todo') 
-                            AND name = 'AssitentNameBackup'
-                        )
+                        DO $$
                         BEGIN
-                            ALTER TABLE Todo DROP COLUMN AssitentName;
-                        END");
-
+                            IF EXISTS (
+                                SELECT 1 
+                                FROM information_schema.columns 
+                                WHERE table_name = 'Todo' 
+                                AND column_name = 'AssistentNameBackup'
+                            ) THEN
+                                ALTER TABLE ""Todo"" DROP COLUMN ""AssistentName"";
+                                RAISE NOTICE 'Original column dropped successfully';
+                            END IF;
+                        END $$;");
+                    
                     // Commit the transaction if all steps completed successfully
-                    migrationBuilder.Sql("COMMIT TRANSACTION");
+                    migrationBuilder.Sql("COMMIT;");
                 }
                 catch
                 {
                     // If any step fails, roll back all changes
-                    migrationBuilder.Sql("IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION");
+                    migrationBuilder.Sql("ROLLBACK;");
                     throw; // Re-throw the exception to alert EF Core that the migration failed
                 }
         }

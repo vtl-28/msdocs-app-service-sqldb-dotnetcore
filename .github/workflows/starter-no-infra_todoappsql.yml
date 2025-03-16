@@ -35,8 +35,8 @@ jobs:
       - name: Create migration bundle
         run: dotnet ef migrations bundle --runtime linux-x64 -o ${{env.DOTNET_ROOT}}/myapp/migrationsbundle
       
-      - name: Set migration bundle as executable
-        run: chmod +x ${{env.DOTNET_ROOT}}/myapp/migrationsbundle
+      - name: Run Database Migrations
+        run: ${{env.DOTNET_ROOT}}/myapp/migrationsbundle --connection "${{ secrets.AZURE_SQL_POSTGRESS_CONNECTIONSTRING }}" 
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -74,4 +74,5 @@ jobs:
           app-name: 'todoAppSQL'
           slot-name: 'Production'
           package: .
+          deployment-name: 'GitHub-Action-${{ github.run_number }}'
           

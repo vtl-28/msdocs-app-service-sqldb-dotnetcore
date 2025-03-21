@@ -9,6 +9,8 @@ namespace DotNetCoreSqlDb.Models
         public string? Description { get; set; }
         public string? Locations { get; set; }
 
+        public string? Assistant { get; set; }
+
         [DisplayName("Created Date")]
         [DataType(DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
